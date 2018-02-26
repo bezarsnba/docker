@@ -19,7 +19,7 @@ RUN apt-get update  && apt-get -y install \
 	wget
 
 COPY apache2.conf /etc/apache2/
-ADD glpi-9.2.1.tgz /tmp/ 
-RUN mv /tmp/glpi/* /var/www/html/ && rm /var/www/html/index.html && chown -R www-data:www-data /var/www/html
+ADD https://github.com/glpi-project/glpi/releases/download/$GLPI_VERSION/glpi-$GLPI_VERSION.tgz /tmp/ 
+RUN tar -zxvf /tmp/glpi-9.2.1.tgz  -C /tmp  && mv /tmp/glpi/* /var/www/html/ && rm /var/www/html/index.html && chown -R www-data:www-data /var/www/html
 EXPOSE 80
 CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
