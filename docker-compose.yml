@@ -1,27 +1,24 @@
-version: '3'
+version: "2.0"
 services:
   web:
-    image: bezarsnba/glpi
+    image: bezarsnba/glpi:9.3.0
     container_name: glpi-web
     hostname: web
     build: .
     ports:
-     - "80:80"
+      - "80:80"
     links:
-     - mysql:mysql 
+     - mysql:mysql
   mysql:
-    image: mysql:5.6.26       
+    image: mysql:5.6.26
     container_name: glpi-db
     hostname: mysql
     volumes:
-       - dbdata:/var/lib/mysql
+      - /opt/mysql:/var/lib/mysql
     environment:
-        MYSQL_ROOT_PASSWORD: 123mudar
-        MYSQL_DATABASE: glpi
-        MYSQL_USER: glpi
-        MYSQL_PASSWORD: glpi
-    ports:   
-     - "3306:3306"    
-
-volumes:
-        dbdata:
+      MYSQL_ROOT_PASSWORD: glpi
+      MYSQL_DATABASE: glpi
+      MYSQL_USER: glpi
+      MYSQL_PASSWORD: glpi
+    ports:
+      - "3306:3306" 
