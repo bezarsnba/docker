@@ -1,0 +1,110 @@
+version: "2"
+services:
+########Master##########
+  #mongodb1:
+  #  image: mongo
+  #  volumes:
+  #  - ./mongo1:/data/db
+  #  networks:
+  #    gray-net:
+  #      ipv4_address: 192.168.50.09
+  #  ports:
+  #    - 27018:27017
+  ## GrayLog
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.12
+    environment:
+      - http.host=0.0.0.0
+      # Disable X-Pack security: https://www.elastic.co/guide/en/elasticsearch/reference/5.5/security-settings.html#general-security-settings
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    networks:
+      gray-net:
+        ipv4_address: 192.168.50.10
+  graylog1:
+    image: graylog/graylog:2.4
+    environment:
+      GRAYLOG_PASSWORD_SECRET: somepasswordpepper1
+      GRAYLOG_ROOT_PASSWORD_SHA2: 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+      #GRAYLOG_WEB_ENDPOINT_URI: http://127.0.0.1:9000/api
+      GRAYLOG_IS_MASTER: 'true'
+      GRAYLOG_WEB_LISTEN_URI: http://192.168.50.11:9000
+      GRAYLOG_MONGODB_URI: mongodb://grayloguser:123456@mongodb2:27017/graylog
+      GRAYLOG_REST_LISTEN_URI: http://192.168.50.11:9000/api
+      GRAYLOG_REST_TRANSPORT_URI: http://192.168.50.11:9000/api
+      GRAYLOG_ELASTICSEARCH_HOST: http://elasticsearch1,elasticsearch2:9200
+    networks:
+      gray-net:
+        ipv4_address: 192.168.50.11
+    links:
+      #- mongodb1:mongo1
+      - mongodb2:mongo2
+      - elasticsearch1:elastic1
+      - elasticsearch2:elastic2
+
+    ports:
+      - 9000:9000
+########node1##########
+  mongodb2:
+    image: mongo
+    volumes:
+    - ./mongo:/data/db
+    networks:
+      gray-net:
+        ipv4_address: 192.168.50.12
+  ## GrayLog
+    ports:
+      - 27017:27017
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.12
+    environment:
+      - http.host=0.0.0.0
+      # Disable X-Pack security: https://www.elastic.co/guide/en/elasticsearch/reference/5.5/security-settings.html#general-security-settings
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    networks:
+      gray-net:
+        ipv4_address: 192.168.50.13
+  graylog2:
+    image: graylog/graylog:2.4
+    environment:
+      GRAYLOG_PASSWORD_SECRET: somepasswordpepper1
+      GRAYLOG_ROOT_PASSWORD_SHA2: 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+      #GRAYLOG_WEB_ENDPOINT_URI: http://127.0.0.1:9000/api
+      GRAYLOG_IS_MASTER: 'false'
+      GRAYLOG_WEB_ENABLE: 'false'
+      GRAYLOG_MONGODB_URI: mongodb://grayloguser:123456@mongodb2:27017/graylog
+      GRAYLOG_REST_LISTEN_URI: http://192.168.50.14:9001/api
+      GRAYLOG_REST_TRANSPORT_URI: http://192.168.50.14:9001/api
+      GRAYLOG_ELASTICSEARCH_HOST: http://elasticsearch1,elasticsearch2:9200
+    networks:
+      gray-net:
+        ipv4_address: 192.168.50.14
+    links:
+      #- mongodb1:mongo1
+      - mongodb2:mongo2
+      - elasticsearch1:elastic1
+      - elasticsearch2:elastic2
+    ports:
+      - 9001:9001   
+       
+networks:
+  gray-net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+      - subnet: 192.168.50.0/24
+        gateway: 192.168.50.1
